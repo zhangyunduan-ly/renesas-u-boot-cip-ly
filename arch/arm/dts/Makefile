@@ -933,7 +933,8 @@ dtb-$(CONFIG_RCAR_GEN3) += \
 	rzg2ul-type2-dev.dtb \
 	smarc-rzg2ul.dtb \
 	rzv2h-dev.dtb \
-	rzv2h-evk-alpha.dtb
+	rzv2h-evk-alpha.dtb \
+	rzv2n-dev.dtb
 
 ifdef CONFIG_RCAR_GEN3
 DTC_FLAGS += -R 4 -p 0x1000
