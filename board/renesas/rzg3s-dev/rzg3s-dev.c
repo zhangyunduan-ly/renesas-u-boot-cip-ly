@@ -96,6 +96,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define LPSTS				0x102
 #define	AHB_BUS_CTR			0x208
 
+#define CONFIG_SYS_TEXT_BASE 0x50000000
+
 void s_init(void)
 {
 	*(volatile u32 *)(PFC_PWPR) = 0;
@@ -219,4 +221,13 @@ int board_init(void)
 
 void reset_cpu(void)
 {
+}
+
+int board_late_init(void)
+{
+#ifdef CONFIG_RENESAS_RZG2LWDT
+	rzg2l_reinitr_wdt();
+#endif // CONFIG_RENESAS_RZG2LWDT
+
+	return 0;
 }
