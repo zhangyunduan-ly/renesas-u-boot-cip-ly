@@ -69,7 +69,7 @@ static void rzg2l_pinctrl_set_function(struct rzg2l_pinctrl_priv *priv,
 	u8 reg8;
 	ofnode cur_node  = dev_ofnode(priv->dev);
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl"))
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl"))
 		port = rzg3s_find_port_offset(port);
 
 	/* Set GPIO or Func in PMC, then set Func in PFC */
@@ -78,7 +78,7 @@ static void rzg2l_pinctrl_set_function(struct rzg2l_pinctrl_priv *priv,
 	writeb(reg8, priv->regs + PMC(port));
 
 	reg32 = readl(priv->regs + PFC(port));
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl"))
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl"))
 		reg32 = (reg32 & ~(0x07 << (pin * 4))) | ((func - 1) << (pin * 4));
 	else
 		reg32 = (reg32 & ~(0x07 << (pin * 4))) | (func << (pin * 4));
@@ -112,7 +112,7 @@ static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config)
 		return -EINVAL;
 	}
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl")) {
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl")) {
 		writel(0, priv->regs + PWPR_G3S);
 		writel(PWPR_PFCWE, priv->regs + PWPR_G3S);
 		nmax_func = 8;
@@ -137,7 +137,7 @@ static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config)
 		rzg2l_pinctrl_set_function(priv, port, pin, func);
 	}
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl")) {
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl")) {
 		writel(0, priv->regs + PWPR_G3S);
 		writel(PWPR_B0WI, priv->regs + PWPR_G3S);
 	} else {
@@ -184,7 +184,7 @@ static const struct udevice_id rzg2l_pinctrl_match[] = {
 	{ .compatible = "renesas,r9a07g054l-pinctrl", .data = 49 },
 	{ .compatible = "renesas,r9a07g043u-pinctrl", .data = 19 },
 	{ .compatible = "renesas,r9a07g043f-pinctrl", .data = 19 },
-	{ .compatible = "renesas,r9a08g045s-pinctrl", .data = 19 }, //19 Port
+	{ .compatible = "renesas,r9a08g045-pinctrl", .data = 19 }, //19 Port
 	{}
 };
 

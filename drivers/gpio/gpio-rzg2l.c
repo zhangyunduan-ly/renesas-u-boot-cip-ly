@@ -72,7 +72,7 @@ static int rzg2l_gpio_get_value(struct udevice *dev, unsigned int offset)
 	u16 reg16;
 	int port_offset;
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl"))
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl"))
 		port_offset = rzg3s_find_port_offset(priv->bank);
 	else
 		port_offset = priv->bank;
@@ -97,7 +97,7 @@ static int rzg2l_gpio_set_value(struct udevice *dev, unsigned int offset,
 	const u8 bit = BIT(offset);
 	int port_offset;
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl"))
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl"))
 		port_offset = rzg3s_find_port_offset(priv->bank);
 	else
 		port_offset = priv->bank;
@@ -118,7 +118,7 @@ static void rzg2l_gpio_set_direction(struct rzg2l_gpio_priv *priv,
 	struct udevice *parent_dev = dev_get_parent(priv->dev);
 	ofnode cur_node  = dev_ofnode(parent_dev);
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl"))
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl"))
 		port_offset = rzg3s_find_port_offset(priv->bank);
 	else
 		port_offset = priv->bank;
@@ -166,7 +166,7 @@ static int rzg2l_gpio_get_function(struct udevice *dev, unsigned int offset)
 	const u8 bit = BIT(offset);
 	int port_offset;
 
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045s-pinctrl"))
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl"))
 		port_offset = rzg3s_find_port_offset(priv->bank);
 	else
 		port_offset = priv->bank;

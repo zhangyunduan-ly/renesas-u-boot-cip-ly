@@ -98,6 +98,9 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define CONFIG_SYS_TEXT_BASE 0x50000000
 
+/* WDT */
+#define WDT_INDEX		0
+
 void s_init(void)
 {
 	*(volatile u32 *)(PFC_PWPR) = 0;

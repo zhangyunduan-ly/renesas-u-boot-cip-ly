@@ -76,13 +76,13 @@
 #define DIVDSIB		(PL5_SDIV_R << 20	| 8 << 12	| 4 << 8)
 #define DIVDSIA		(PL5_SDIV_R << 20	| 0 << 12	| 2 << 8)
 
-/*16bits register offset, 8bits ON/MON, 8bits RESET*/
+/*16bits register offset, 16bits ON/MON
+RESET not used it is being replaced by On/MON*/
 #define MSSR(off, on, res)	((off & 0xffff) << 16	\
-				| (on & 0xff) << 8	\
-				| (res & 0xff))
+				| (on & 0xffff) )
 #define MSSR_OFF(val)		((val >> 16) & 0xffff)
-#define MSSR_ON(val)		((val >> 8) & 0xff)
-#define MSSR_RES(val)		(val & 0xff)
+#define MSSR_ON(val)		(val & 0xffff)
+
 
 /*
  * Definitions of CPG Core Clocks
