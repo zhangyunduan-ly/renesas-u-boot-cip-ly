@@ -48,7 +48,7 @@ extern const struct clk_ops rzg2l_clk_ops;
 
 enum clk_ids {
 	/* Core Clock Outputs exported to DT */
-	LAST_DT_CORE_CLK = R9A08G045_OSCCLK,
+	LAST_DT_CORE_CLK = R9A08G045_SWD,
 
 	/* External Input Clocks */
 	CLK_XINCLK,

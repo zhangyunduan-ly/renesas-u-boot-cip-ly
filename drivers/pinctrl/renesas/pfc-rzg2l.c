@@ -27,6 +27,7 @@
 #define PWPR_PFCWE	BIT(6)		  /* PFC Register Write Enable */
 
 #define RZG2L_MAX_PINS_PER_PORT		8
+#define MAX_PINS_ONE_IP				70
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -88,55 +89,58 @@ static void rzg2l_pinctrl_set_function(struct rzg2l_pinctrl_priv *priv,
 
 static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config)
 {
-	struct rzg2l_pinctrl_priv *priv = dev_get_plat(dev);
+
+	u32 pin_mux[MAX_PINS_ONE_IP];
+	int rv, len;
+	ofnode subnode;
+	ofnode node  = dev_ofnode(config);
 	ofnode cur_node  = dev_ofnode(dev);
+	struct rzg2l_pinctrl_priv *priv = dev_get_plat(dev);
 	u16 port;
 	u16 port_max = (u16)dev_get_driver_data(dev);
 	u8 pin, func;
-	int i, count;
-	const u32 *data;
-	u32 cells[port_max * RZG2L_MAX_PINS_PER_PORT];
+	int i;
 	u8 nmax_func = 5;
 	u8 nmin_func = 0;
 
-	data = dev_read_prop(config, "pinmux", &count);
-	if (count < 0) {
-		debug("%s: bad array size %d\n", __func__, count);
-		return -EINVAL;
-	}
-
-	count /= sizeof(u32);
-	if (count > port_max * RZG2L_MAX_PINS_PER_PORT) {
-		debug("%s: unsupported pins array count %d\n",
-		      __func__, count);
-		return -EINVAL;
-	}
-
-	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl")) {
-		writel(0, priv->regs + PWPR_G3S);
-		writel(PWPR_PFCWE, priv->regs + PWPR_G3S);
-		nmax_func = 8;
-		nmin_func = 1;
-	} else {
-		writel(0, priv->regs + PWPR);
-		writel(PWPR_PFCWE, priv->regs + PWPR);
-	}
-
-	for (i = 0 ; i < count; i++) {
-		cells[i] = fdt32_to_cpu(data[i]);
-		func = (cells[i] >> 12) & 0xf;
-		port = (cells[i] / RZG2L_MAX_PINS_PER_PORT) & 0x1ff;
-		pin = cells[i] % RZG2L_MAX_PINS_PER_PORT;
-		if (func > nmax_func || func < nmin_func || port >= port_max ||
-				pin >= RZG2L_MAX_PINS_PER_PORT) {
-			printf("Invalid cell %i in node %s!\n",
-			       count, ofnode_get_name(dev_ofnode(config)));
-			continue;
+	/*
+	 * check for "pinmux" property in each subnode 
+	 * */
+	ofnode_for_each_subnode(subnode, node) {
+		rv = ofnode_read_size(subnode, "pinmux");
+		if (rv < 0)
+			return rv;
+		len = rv / sizeof(u32);
+		if (len > MAX_PINS_ONE_IP)
+			return -EINVAL;
+		rv = ofnode_read_u32_array(subnode, "pinmux", pin_mux, len);
+		if (rv < 0)
+			return rv;
+		
+		if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl")) {
+			writel(0, priv->regs + PWPR_G3S);
+			writel(PWPR_PFCWE, priv->regs + PWPR_G3S);
+			nmax_func = 8;
+			nmin_func = 1;
+		} else {
+			writel(0, priv->regs + PWPR);
+			writel(PWPR_PFCWE, priv->regs + PWPR);
 		}
 
-		rzg2l_pinctrl_set_function(priv, port, pin, func);
+		for (i = 0; i < len; i++) {
+			func = (pin_mux[i] >> 16) & 0xf;
+			port = (pin_mux[i] / RZG2L_MAX_PINS_PER_PORT) & 0x1ff;
+			pin = pin_mux[i] % RZG2L_MAX_PINS_PER_PORT;
+			if (func > nmax_func || func < nmin_func || port >= port_max ||
+				pin >= RZG2L_MAX_PINS_PER_PORT) 
+			{
+				printf("Invalid cell %i in node %s!\n",
+			       len, ofnode_get_name(dev_ofnode(config)));
+				continue;
+			}
+			rzg2l_pinctrl_set_function(priv, port, pin, func);
+		}
 	}
-
 	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl")) {
 		writel(0, priv->regs + PWPR_G3S);
 		writel(PWPR_B0WI, priv->regs + PWPR_G3S);
@@ -144,6 +148,7 @@ static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config)
 		writel(0, priv->regs + PWPR);
 		writel(PWPR_B0WI, priv->regs + PWPR);
 	}
+
 	return 0;
 }
 
@@ -184,7 +189,7 @@ static const struct udevice_id rzg2l_pinctrl_match[] = {
 	{ .compatible = "renesas,r9a07g054l-pinctrl", .data = 49 },
 	{ .compatible = "renesas,r9a07g043u-pinctrl", .data = 19 },
 	{ .compatible = "renesas,r9a07g043f-pinctrl", .data = 19 },
-	{ .compatible = "renesas,r9a08g045-pinctrl", .data = 19 }, //19 Port
+	{ .compatible = "renesas,r9a08g045-pinctrl", .data = 49 }, //19 Port
 	{}
 };
 
