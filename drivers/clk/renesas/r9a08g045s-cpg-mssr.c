@@ -319,7 +319,7 @@ static struct mssr_mod_clk r9a08g045s_mod_clks[] = {
 };
 
 static const unsigned int r9a08g045s_crit_mod_clks[] = {
-	CLK_MODE_BASE + R9A08G045_VBAT_BCLK,
+	CLK_MODE_BASE + R9A08G045_CLK_USB1,
 };
 
 /* clock type, register offset1, register offset2, register offset3*/
