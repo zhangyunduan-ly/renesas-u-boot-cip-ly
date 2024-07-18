@@ -29,7 +29,7 @@ static int mod_clk_get(struct clk *clk, struct cpg_mssr_info *info,
 
 	for (i = 0; i < info->mod_clk_size; i++) {
 		if (info->mod_clk[i].id !=
-		    (info->mod_clk_base + MOD_CLK_PACK(clkid)))
+		    (info->mod_clk_base + clkid))
 			continue;
 
 		*mssr = &info->mod_clk[i];
@@ -52,7 +52,12 @@ static int rzg2l_clk_enable(struct clk *clk)
 	}
 
 	/* Set write_mask bit, set clk enable, then check monitor status */
-	mod_clk_get(clk, priv->info, &clock);
+	ret = mod_clk_get(clk, priv->info, &clock);
+	if(ret != 0)
+	{
+		debug("module clock not found \n");
+		return -1;
+	}
 	value = (MSSR_ON(clock->bit) << 16) | MSSR_ON(clock->bit);
 	setbits_le32(priv->base + CLK_ON_R(MSSR_OFF(clock->bit) * 4), value);
 	ret = wait_for_bit_le32(priv->base + CLK_MON_R(MSSR_OFF(clock->bit) * 4),
