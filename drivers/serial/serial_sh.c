@@ -41,22 +41,45 @@ static int scif_rxfill(struct uart_port *port)
 #else
 static int scif_rxfill(struct uart_port *port)
 {
-	return sci_in(port, SCFDR) & SCIF_RFDC_MASK;
+	if (port->type == PORT_RSCI) {
+		unsigned int rxfill_val = (sci_in(port, FRSR) & FRSR_RFDC_MASK) >> FRSR_RFDC_SHIFT;
+		return rxfill_val;
+	} else {
+		return sci_in(port, SCFDR) & SCIF_RFDC_MASK;
+	}
 }
 #endif
 
 static void sh_serial_init_generic(struct uart_port *port)
 {
-	sci_out(port, SCSCR , SCSCR_INIT(port));
-	sci_out(port, SCSCR , SCSCR_INIT(port));
-	sci_out(port, SCSMR, 0);
-	sci_out(port, SCSMR, 0);
-	sci_out(port, SCFCR, SCFCR_RFRST|SCFCR_TFRST);
-	sci_in(port, SCFCR);
-	sci_out(port, SCFCR, 0);
-#if defined(CONFIG_RZA1)
-	sci_out(port, SCSPTR, 0x0003);
-#endif
+	if (port->type == PORT_RSCI) {
+		sci_out(port, CCR3, (CCR3_INIT | CCR3_FM));
+		sci_out(port, CCR3, (CCR3_INIT | CCR3_FM));
+
+		sci_out(port, CCR2, CCR2_INIT_BRR);
+		sci_out(port, CCR2, CCR2_INIT_BRR);
+
+		sci_out(port, CCR1, 0);
+		sci_out(port, CCR1, 0);
+
+		sci_out(port, RSCFCR, (sci_in(port, RSCFCR) | (FCR_RFRST | FCR_TFRST)));
+		sci_in(port, RSCFCR);
+		sci_out(port, RSCFCR, FCR_INIT);
+
+		sci_out(port, CCR0, CCR0_INIT);
+		sci_out(port, CCR0, CCR0_INIT);
+	} else {
+		sci_out(port, SCSCR, SCSCR_INIT(port));
+		sci_out(port, SCSCR, SCSCR_INIT(port));
+		sci_out(port, SCSMR, 0);
+		sci_out(port, SCSMR, 0);
+		sci_out(port, SCFCR, SCFCR_RFRST|SCFCR_TFRST);
+		sci_in(port, SCFCR);
+		sci_out(port, SCFCR, 0);
+		#if defined(CONFIG_RZA1)
+		sci_out(port, SCSPTR, 0x0003);
+		#endif
+	}
 }
 
 static void
@@ -68,16 +91,24 @@ sh_serial_setbrg_generic(struct uart_port *port, int clk, int baudrate)
 		/* Need wait: Clock * 1/dl * 1/16 */
 		udelay((1000000 * dl * 16 / clk) * 1000 + 1);
 	} else {
-		sci_out(port, SCBRR, SCBRR_VALUE(baudrate, clk));
+		if (port->type == PORT_RSCI) {
+			sci_out(port, CCR2, CCR2_INIT_BRR);
+		} else
+			sci_out(port, SCBRR, SCBRR_VALUE(baudrate, clk));
 	}
 }
 
 static void handle_error(struct uart_port *port)
 {
-	sci_in(port, SCxSR);
-	sci_out(port, SCxSR, SCxSR_ERROR_CLEAR(port));
-	sci_in(port, SCLSR);
-	sci_out(port, SCLSR, 0x00);
+	if (port->type == PORT_RSCI) {
+		sci_out(port, CFCLR, (CFCLR_RDRFC | CFCLR_TDREC | CFCLR_ORERC));
+		sci_out(port, FFCLR, FFCLR_DRC);
+	} else {
+		sci_in(port, SCxSR);
+		sci_out(port, SCxSR, SCxSR_ERROR_CLEAR(port));
+		sci_in(port, SCLSR);
+		sci_out(port, SCLSR, 0x00);
+	}
 }
 
 static int serial_raw_putc(struct uart_port *port, const char c)
@@ -86,17 +117,26 @@ static int serial_raw_putc(struct uart_port *port, const char c)
 	/* Tx fifo is empty */
 #ifdef CONFIG_RZF_DEV
 	if (!(sci_in(port, SCxSR) & (SCxSR_TEND(port) | SCxSR_TDxE(port))))
+		return -EAGAIN;
 #else
-	if (!(sci_in(port, SCxSR) & SCxSR_TEND(port)))
-#endif
+	if ((port->type == PORT_RSCI && !(sci_in(port, RSCxSR) & CSR_TEND)) ||
+		(port->type != PORT_RSCI && !(sci_in(port, SCxSR) & SCxSR_TEND(port))))
 		return -EAGAIN;
 #endif
+#endif
 
-	sci_out(port, SCxTDR, c);
+	if (port->type == PORT_RSCI)
+		sci_out(port, RSCxTDR, c);
+	else
+		sci_out(port, SCxTDR, c);
+
 #ifdef CONFIG_RZF_DEV
 	sci_out(port, SCxSR, sci_in(port, SCxSR) & ~(SCxSR_TEND(port) | SCxSR_TDxE(port)));
 #else
-	sci_out(port, SCxSR, sci_in(port, SCxSR) & ~SCxSR_TEND(port));
+	if (port->type == PORT_RSCI)
+		sci_out(port, CFCLR, CFCLR_TDREC);
+	else
+		sci_out(port, SCxSR, sci_in(port, SCxSR) & ~SCxSR_TEND(port));
 #endif
 
 	return 0;
@@ -109,7 +149,14 @@ static int serial_rx_fifo_level(struct uart_port *port)
 
 static int sh_serial_tstc_generic(struct uart_port *port)
 {
-	if (sci_in(port, SCxSR) & SCIF_ERRORS) {
+	unsigned int errors = 0;
+
+	if (port->type == PORT_RSCI)
+		errors = sci_in(port, RSCxSR) & CSR_ERRORS;
+	else
+		errors = sci_in(port, SCxSR) & SCIF_ERRORS;
+
+	if (errors) {
 		handle_error(port);
 		return 0;
 	}
@@ -119,38 +166,69 @@ static int sh_serial_tstc_generic(struct uart_port *port)
 
 static int serial_getc_check(struct uart_port *port)
 {
-	unsigned short status;
+	if (port->type == PORT_RSCI) {
+		unsigned int status;
 
-	status = sci_in(port, SCxSR);
+		status = sci_in(port, RSCxSR);
 
-	if (status & SCIF_ERRORS)
-		handle_error(port);
-	if (sci_in(port, SCLSR) & SCxSR_ORER(port))
-		handle_error(port);
-	status &= (SCIF_DR | SCxSR_RDxF(port));
-	if (status)
-		return status;
+		if (status & CSR_ERRORS)
+			handle_error(port);
+		if (status & CSR_ORER)
+			handle_error(port);
+		status &= CSR_RDRF;
+		if (status)
+			return status;
+
+		status = sci_in(port, FRSR);
+		status &= FRSR_DR;
+		if (status)
+			return status;
+	} else {
+		unsigned short status;
+
+		status = sci_in(port, SCxSR);
+
+		if (status & SCIF_ERRORS)
+			handle_error(port);
+		if (sci_in(port, SCLSR) & SCxSR_ORER(port))
+			handle_error(port);
+		status &= (SCIF_DR | SCxSR_RDxF(port));
+		if (status)
+			return status;
+	}
 	return scif_rxfill(port);
 }
 
 static int sh_serial_getc_generic(struct uart_port *port)
 {
-	unsigned short status;
+	unsigned int status;
 	char ch;
 
 	if (!serial_getc_check(port))
 		return -EAGAIN;
 
-	ch = sci_in(port, SCxRDR);
-	status = sci_in(port, SCxSR);
+	if (port->type == PORT_RSCI) {
+		ch = sci_in(port, RSCxRDR);
+		status = sci_in(port, RSCxSR);
 
-	sci_out(port, SCxSR, SCxSR_RDxF_CLEAR(port));
+		sci_out(port, CFCLR, CFCLR_RDRFC);
+	} else {
+		ch = sci_in(port, SCxRDR);
+		status = sci_in(port, SCxSR);
 
-	if (status & SCIF_ERRORS)
-		handle_error(port);
+		sci_out(port, SCxSR, SCxSR_RDxF_CLEAR(port));
+	}
 
-	if (sci_in(port, SCLSR) & SCxSR_ORER(port))
-		handle_error(port);
+	if (port->type == PORT_RSCI) {
+		if (status & (CSR_ERRORS | CSR_ORER))
+			handle_error(port);
+	} else {
+		if (status & SCIF_ERRORS)
+			handle_error(port);
+
+		if (sci_in(port, SCLSR) & SCxSR_ORER(port))
+			handle_error(port);
+	}
 
 	return ch;
 }
@@ -215,6 +293,7 @@ static const struct udevice_id sh_serial_id[] ={
 	{.compatible = "renesas,sci", .data = PORT_SCI},
 	{.compatible = "renesas,scif", .data = PORT_SCIF},
 	{.compatible = "renesas,scifa", .data = PORT_SCIFA},
+	{.compatible = "renesas,rsci", .data = PORT_RSCI},
 	{}
 };
 
