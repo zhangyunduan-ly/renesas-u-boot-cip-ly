@@ -132,6 +132,7 @@ struct eqos_mac_regs {
 #define EQOS_MAC_MDIO_ADDRESS_CR_SHIFT			8
 #define EQOS_MAC_MDIO_ADDRESS_CR_20_35			2
 #define EQOS_MAC_MDIO_ADDRESS_CR_250_300		5
+#define EQOS_MAC_MDIO_ADDRESS_CR_150_250		4
 #define EQOS_MAC_MDIO_ADDRESS_SKAP			BIT(4)
 #define EQOS_MAC_MDIO_ADDRESS_GOC_SHIFT			2
 #define EQOS_MAC_MDIO_ADDRESS_GOC_READ			3
@@ -786,6 +787,11 @@ static ulong eqos_get_tick_clk_rate_imx(struct udevice *dev)
 	return imx_get_eqos_csr_clk();
 }
 
+static ulong eqos_get_tick_clk_rate_rzt2h(struct udevice *dev)
+{
+       return 125000000;
+}
+
 static int eqos_set_full_duplex(struct udevice *dev)
 {
 	struct eqos_priv *eqos = dev_get_priv(dev);
@@ -882,6 +888,21 @@ static int eqos_set_tx_clk_speed_tegra186(struct udevice *dev)
 	return 0;
 }
 
+static int eqos_set_tx_clk_speed_rzt2h(struct udevice *dev)
+{
+       struct eqos_priv *eqos = dev_get_priv(dev);
+#if IS_ENABLED(CONFIG_DWC_ETH_QOS_RZT2H)
+       debug("%s(dev=%p):\n", __func__, dev);
+
+	/* U-boot T2H only support GMAC1, port 3 */
+	ethss_link_up(3, eqos->phy->interface, eqos->phy->speed, eqos->phy->duplex);
+
+#endif
+       udelay(100);
+
+       return 0;
+}
+
 static int eqos_set_tx_clk_speed_imx(struct udevice *dev)
 {
 	struct eqos_priv *eqos = dev_get_priv(dev);
@@ -952,6 +973,9 @@ static int eqos_adjust_link(struct udevice *dev)
 		pr_err("eqos_set_*mii_speed*() failed: %d", ret);
 		return ret;
 	}
+
+	/* U-boot T2H only support GMAC1, port 3 */
+	ethss_link_up(3, eqos->phy->interface, eqos->phy->speed, eqos->phy->duplex);
 
 	if (en_calibration) {
 		ret = eqos->config->ops->eqos_calibrate_pads(dev);
@@ -1311,8 +1335,7 @@ static int eqos_start(struct udevice *dev)
 
 	for (i = 0; i < EQOS_DESCRIPTORS_RX; i++) {
 		struct eqos_desc *rx_desc = eqos_get_desc(eqos, i, true);
-		rx_desc->des0 = (u32)(ulong)(eqos->rx_dma_buf +
-					     (i * EQOS_MAX_PACKET_SIZE));
+		rx_desc->des0 = (u32)(ulong)((u64)eqos->rx_dma_buf + (i * EQOS_MAX_PACKET_SIZE));
 		rx_desc->des3 = EQOS_DESC3_OWN | EQOS_DESC3_BUF1V;
 		mb();
 		eqos->config->ops->eqos_flush_desc(rx_desc);
@@ -1322,14 +1345,12 @@ static int eqos_start(struct udevice *dev)
 	}
 
 	writel(0, &eqos->dma_regs->ch0_txdesc_list_haddress);
-	writel((ulong)eqos_get_desc(eqos, 0, false),
-		&eqos->dma_regs->ch0_txdesc_list_address);
+	writel((ulong)((u64)eqos_get_desc(eqos, 0, false)), &eqos->dma_regs->ch0_txdesc_list_address);
 	writel(EQOS_DESCRIPTORS_TX - 1,
 	       &eqos->dma_regs->ch0_txdesc_ring_length);
 
 	writel(0, &eqos->dma_regs->ch0_rxdesc_list_haddress);
-	writel((ulong)eqos_get_desc(eqos, 0, true),
-		&eqos->dma_regs->ch0_rxdesc_list_address);
+	writel((ulong)((u64)eqos_get_desc(eqos, 0, true)), &eqos->dma_regs->ch0_rxdesc_list_address);
 	writel(EQOS_DESCRIPTORS_RX - 1,
 	       &eqos->dma_regs->ch0_rxdesc_ring_length);
 
@@ -1348,7 +1369,7 @@ static int eqos_start(struct udevice *dev)
 	 * that's not distinguishable from none of the descriptors being
 	 * available.
 	 */
-	last_rx_desc = (ulong)eqos_get_desc(eqos, EQOS_DESCRIPTORS_RX - 1, true);
+	last_rx_desc = (ulong)((u64)eqos_get_desc(eqos, EQOS_DESCRIPTORS_RX - 1, true));
 	writel(last_rx_desc, &eqos->dma_regs->ch0_rxdesc_tail_pointer);
 
 	eqos->started = true;
@@ -1437,7 +1458,7 @@ static int eqos_send(struct udevice *dev, void *packet, int length)
 	eqos->tx_desc_idx++;
 	eqos->tx_desc_idx %= EQOS_DESCRIPTORS_TX;
 
-	tx_desc->des0 = (ulong)eqos->tx_dma_buf;
+	tx_desc->des0 = (ulong)((u64)eqos->tx_dma_buf);
 	tx_desc->des1 = 0;
 	tx_desc->des2 = length;
 	/*
@@ -1448,8 +1469,7 @@ static int eqos_send(struct udevice *dev, void *packet, int length)
 	tx_desc->des3 = EQOS_DESC3_OWN | EQOS_DESC3_FD | EQOS_DESC3_LD | length;
 	eqos->config->ops->eqos_flush_desc(tx_desc);
 
-	writel((ulong)eqos_get_desc(eqos, eqos->tx_desc_idx, false),
-		&eqos->dma_regs->ch0_txdesc_tail_pointer);
+	writel((ulong)((u64)eqos_get_desc(eqos, eqos->tx_desc_idx, false)), &eqos->dma_regs->ch0_txdesc_tail_pointer);
 
 	for (i = 0; i < 1000000; i++) {
 		eqos->config->ops->eqos_inval_desc(tx_desc);
@@ -1512,7 +1532,7 @@ static int eqos_free_pkt(struct udevice *dev, uchar *packet, int length)
 	mb();
 	eqos->config->ops->eqos_flush_desc(rx_desc);
 	eqos->config->ops->eqos_inval_buffer(packet, length);
-	rx_desc->des0 = (u32)(ulong)packet;
+	rx_desc->des0 = (u32)(ulong)((u64)packet);
 	rx_desc->des1 = 0;
 	rx_desc->des2 = 0;
 	/*
@@ -1522,8 +1542,7 @@ static int eqos_free_pkt(struct udevice *dev, uchar *packet, int length)
 	mb();
 	rx_desc->des3 = EQOS_DESC3_OWN | EQOS_DESC3_BUF1V;
 	eqos->config->ops->eqos_flush_desc(rx_desc);
-
-	writel((ulong)rx_desc, &eqos->dma_regs->ch0_rxdesc_tail_pointer);
+	writel((ulong)((u64)rx_desc), &eqos->dma_regs->ch0_rxdesc_tail_pointer);
 
 	eqos->rx_desc_idx++;
 	eqos->rx_desc_idx %= EQOS_DESCRIPTORS_RX;
@@ -1674,6 +1693,32 @@ err_free_reset_eqos:
 	return ret;
 }
 
+static int eqos_probe_resources_rzt2h(struct udevice *dev)
+{
+	struct eqos_priv *eqos = dev_get_priv(dev);
+	int ret;
+	phy_interface_t interface;
+
+	debug("%s(dev=%p):\n", __func__, dev);
+
+	interface = eqos->config->interface(dev);
+
+	if (interface == PHY_INTERFACE_MODE_NONE) {
+		pr_err("Invalid PHY interface\n");
+		return -EINVAL;
+	}
+
+	ret = board_interface_eth_init(dev, interface);
+	if (ret)
+		return -EINVAL;
+
+	eqos->max_speed = dev_read_u32_default(dev, "max-speed", 0);
+
+	debug("%s: returns %d\n", __func__, ret);
+
+	return ret;
+}
+
 /* board-specific Ethernet Interface initializations. */
 __weak int board_interface_eth_init(struct udevice *dev,
 				    phy_interface_t interface_type)
@@ -1757,6 +1802,20 @@ static phy_interface_t eqos_get_interface_tegra186(struct udevice *dev)
 	return PHY_INTERFACE_MODE_MII;
 }
 
+static phy_interface_t eqos_get_interface_rzt2h(struct udevice *dev)
+{
+	const char *phy_mode;
+	phy_interface_t interface = PHY_INTERFACE_MODE_NONE;
+
+	debug("%s(dev=%p):\n", __func__, dev);
+
+	phy_mode = dev_read_prop(dev, "phy-mode", NULL);
+	if (phy_mode)
+		interface = phy_get_interface_by_name(phy_mode);
+
+	return interface;
+}
+
 static int eqos_probe_resources_imx(struct udevice *dev)
 {
 	struct eqos_priv *eqos = dev_get_priv(dev);
@@ -1811,11 +1870,10 @@ static int eqos_remove_resources_tegra186(struct udevice *dev)
 
 static int eqos_remove_resources_stm32(struct udevice *dev)
 {
-#ifdef CONFIG_CLK
 	struct eqos_priv *eqos = dev_get_priv(dev);
 
 	debug("%s(dev=%p):\n", __func__, dev);
-
+#ifdef CONFIG_CLK
 	clk_free(&eqos->clk_tx);
 	clk_free(&eqos->clk_rx);
 	clk_free(&eqos->clk_master_bus);
@@ -1828,6 +1886,13 @@ static int eqos_remove_resources_stm32(struct udevice *dev)
 
 	debug("%s: OK\n", __func__);
 	return 0;
+}
+
+static int eqos_remove_resources_rzt2h(struct udevice *dev)
+{
+       /* Board init */
+
+       return 0;
 }
 
 static int eqos_probe(struct udevice *dev)
@@ -2017,6 +2082,34 @@ struct eqos_config __maybe_unused eqos_imx_config = {
 	.ops = &eqos_imx_ops
 };
 
+static struct eqos_ops eqos_rzt2h_ops = {
+       .eqos_inval_desc = eqos_inval_desc_generic,
+       .eqos_flush_desc = eqos_flush_desc_generic,
+       .eqos_inval_buffer = eqos_inval_buffer_generic,
+       .eqos_flush_buffer = eqos_flush_buffer_generic,
+       .eqos_probe_resources = eqos_probe_resources_rzt2h,
+       .eqos_remove_resources = eqos_remove_resources_rzt2h,
+       .eqos_stop_resets = eqos_null_ops,
+       .eqos_start_resets = eqos_null_ops,
+       .eqos_stop_clks = eqos_null_ops,
+       .eqos_start_clks = eqos_null_ops,
+       .eqos_calibrate_pads = eqos_null_ops,
+       .eqos_disable_calibration = eqos_null_ops,
+       .eqos_set_tx_clk_speed = eqos_set_tx_clk_speed_rzt2h,
+       .eqos_get_tick_clk_rate = eqos_get_tick_clk_rate_rzt2h
+};
+
+static const struct eqos_config __maybe_unused eqos_rzt2h_config = {
+       .reg_access_always_ok = false,
+       .mdio_wait = 10,
+       .swr_wait = 10,
+       .config_mac = EQOS_MAC_RXQ_CTRL0_RXQ0EN_ENABLED_DCB,
+       .config_mac_mdio = EQOS_MAC_MDIO_ADDRESS_CR_150_250,
+       .axi_bus_width = EQOS_AXI_WIDTH_128,
+       .interface = eqos_get_interface_rzt2h,
+       .ops = &eqos_rzt2h_ops
+};
+
 static const struct udevice_id eqos_ids[] = {
 #if IS_ENABLED(CONFIG_DWC_ETH_QOS_TEGRA186)
 	{
@@ -2036,7 +2129,12 @@ static const struct udevice_id eqos_ids[] = {
 		.data = (ulong)&eqos_imx_config
 	},
 #endif
-
+#if IS_ENABLED(CONFIG_DWC_ETH_QOS_RZT2H)
+	{
+		.compatible = "renesas,rzt2h-eqos",
+		.data = (ulong)&eqos_rzt2h_config
+	},
+#endif
 	{ }
 };
 
