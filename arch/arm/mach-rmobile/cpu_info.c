@@ -102,13 +102,17 @@ static const u8 *get_cpu_name(int idx)
 #ifdef CONFIG_ARCH_MISC_INIT
 int arch_misc_init(void)
 {
+
+#ifdef CONFIG_R9A09G077
+	env_set("platform", "r9a09g077");
+#else
 	int i, idx = rmobile_cpuinfo_idx();
 	const u8 *cpu_name = get_cpu_name(idx);
 	char cpu[10] = { 0 };
 
 	if ((rmobile_cpuinfo[idx].cpu_type == RMOBILE_CPU_TYPE_R8A7796) &&
-	    (rmobile_get_cpu_rev_integer() == 3) &&
-	    (rmobile_get_cpu_rev_fraction() == 0)) {
+		(rmobile_get_cpu_rev_integer() == 3) &&
+		(rmobile_get_cpu_rev_fraction() == 0)) {
 		env_set("platform", "r8a774a3");
 	} else {
 		for (i = 0; i < sizeof(cpu); i++)
@@ -116,26 +120,30 @@ int arch_misc_init(void)
 
 		env_set("platform", cpu);
 	}
-
+#endif
 	return 0;
 }
 #endif
 
 int print_cpuinfo(void)
 {
+
+#ifdef CONFIG_R9A09G077
+	printf("CPU: Renesas Electronics RZ/T2H\n");
+#else
 	int i = rmobile_cpuinfo_idx();
 
 	/* Specific cases for RZ/G2M */
 	if (rmobile_cpuinfo[i].cpu_type == RMOBILE_CPU_TYPE_R8A7796) {
 		if ((rmobile_get_cpu_rev_integer() == 1) &&
-		    (rmobile_get_cpu_rev_fraction() == 1)) {
+			(rmobile_get_cpu_rev_fraction() == 1)) {
 			printf("CPU:   Renesas Electronics %s rev 1.1/rev 1.2\n",
 				get_cpu_name(i));
 			return 0;
 		}
 
 		if ((rmobile_get_cpu_rev_integer() == 3) &&
-		    (rmobile_get_cpu_rev_fraction() == 0)) {
+			(rmobile_get_cpu_rev_fraction() == 0)) {
 			printf("CPU:   Renesas Electronics R8A774A3\n");
 			return 0;
 		}
@@ -145,6 +153,7 @@ int print_cpuinfo(void)
 		get_cpu_name(i), rmobile_get_cpu_rev_integer(),
 		rmobile_get_cpu_rev_fraction());
 
+#endif
 	return 0;
 }
 #else
