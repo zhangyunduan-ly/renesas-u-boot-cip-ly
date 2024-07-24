@@ -125,4 +125,8 @@ config PINCTRL_PFC_RZG2L
 	help
 	  Support pin multiplexing control on Renesas RZ/G2L SoCs.
 
+config PINCTRL_PFC_RZT2H
+	bool "Renesas RZ/T2H pin control driver"
+	help
+	  Support pin multiplexing control on Renesas RZ/T2H SoCs.
 endif
