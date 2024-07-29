@@ -199,13 +199,13 @@
 &ehci0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&usb0_pins>;
-	status = "okay";
+	status = "disabled";
 };
 
 &ehci1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&usb1_pins>;
-	status = "okay";
+	status = "disabled";
 };
 
 &pinctrl {
