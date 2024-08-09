@@ -13,10 +13,6 @@
 	#address-cells = <2>;
 	#size-cells = <2>;
 
-    signature {
-        capsule-key = /incbin/("CRT.esl");
-    };
-
 	audio_clk1: audio1-clk {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -312,7 +308,7 @@
 		};
 
 		scif0: serial@1004b800 {
-			compatible = "renesas,scif-r9a07g044","renesas,scif";
+			compatible = "renesas,scif-r9a07g044";
 			reg = <0 0x1004b800 0 0x400>;
 			interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>,
@@ -330,7 +326,7 @@
 		};
 
 		scif1: serial@1004bc00 {
-			compatible = "renesas,scif-r9a07g044","renesas,scif";
+			compatible = "renesas,scif-r9a07g044";
 			reg = <0 0x1004bc00 0 0x400>;
 			interrupts = <GIC_SPI 385 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 387 IRQ_TYPE_LEVEL_HIGH>,
@@ -348,7 +344,7 @@
 		};
 
 		scif2: serial@1004c000 {
-			compatible = "renesas,scif-r9a07g044","renesas,scif";
+			compatible = "renesas,scif-r9a07g044";
 			reg = <0 0x1004c000 0 0x400>;
 			interrupts = <GIC_SPI 390 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 392 IRQ_TYPE_LEVEL_HIGH>,
@@ -366,7 +362,7 @@
 		};
 
 		scif3: serial@1004c400 {
-			compatible = "renesas,scif-r9a07g044","renesas,scif";
+			compatible = "renesas,scif-r9a07g044";
 			reg = <0 0x1004c400 0 0x400>;
 			interrupts = <GIC_SPI 395 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 397 IRQ_TYPE_LEVEL_HIGH>,
@@ -384,7 +380,7 @@
 		};
 
 		scif4: serial@1004c800 {
-			compatible = "renesas,scif-r9a07g044","renesas,scif";
+			compatible = "renesas,scif-r9a07g044";
 			reg = <0 0x1004c800 0 0x400>;
 			interrupts = <GIC_SPI 400 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 402 IRQ_TYPE_LEVEL_HIGH>,
@@ -402,7 +398,7 @@
 		};
 
 		sci0: serial@1004d000 {
-			compatible = "renesas,r9a07g044-sci", "renesas,sci", "renesas,rz-sci";
+			compatible = "renesas,sci";
 			reg = <0 0x1004d000 0 0x400>;
 			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 406 IRQ_TYPE_EDGE_RISING>,
@@ -417,7 +413,7 @@
 		};
 
 		sci1: serial@1004d400 {
-			compatible = "renesas,r9a07g044-sci", "renesas,sci", "renesas,rz-sci";
+			compatible = "renesas,sci";
 			reg = <0 0x1004d400 0 0x400>;
 			interrupts = <GIC_SPI 409 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 410 IRQ_TYPE_EDGE_RISING>,
@@ -468,7 +464,7 @@
 		i2c0: i2c@10058000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
-			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz","renesas,riic-r9a07g044l";
+			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz";
 			reg = <0 0x10058000 0 0x400>;
 			interrupts = <GIC_SPI 350 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 348 IRQ_TYPE_EDGE_RISING>,
@@ -490,7 +486,7 @@
 		i2c1: i2c@10058400 {
 			#address-cells = <1>;
 			#size-cells = <0>;
-			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz","renesas,riic-r9a07g044l";
+			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz";
 			reg = <0 0x10058400 0 0x400>;
 			interrupts = <GIC_SPI 358 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 356 IRQ_TYPE_EDGE_RISING>,
@@ -512,7 +508,7 @@
 		i2c2: i2c@10058800 {
 			#address-cells = <1>;
 			#size-cells = <0>;
-			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz","renesas,riic-r9a07g044l";
+			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz";
 			reg = <0 0x10058800 0 0x400>;
 			interrupts = <GIC_SPI 366 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 364 IRQ_TYPE_EDGE_RISING>,
@@ -534,7 +530,7 @@
 		i2c3: i2c@10058c00 {
 			#address-cells = <1>;
 			#size-cells = <0>;
-			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz","renesas,riic-r9a07g044l";
+			compatible = "renesas,riic-r9a07g044", "renesas,riic-rz";
 			reg = <0 0x10058c00 0 0x400>;
 			interrupts = <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 372 IRQ_TYPE_EDGE_RISING>,
@@ -607,7 +603,7 @@
 
 		sbc: spi@10060000 {
 			compatible = "renesas,r9a07g044-rpc-if",
-				     "renesas,rzg2l-rpc-if","renesas,r9a07g044l-spibsc";
+				     "renesas,rzg2l-rpc-if";
 			reg = <0 0x10060000 0 0x10000>,
 			      <0 0x20000000 0 0x10000000>,
 			      <0 0x10070000 0 0x10000>;
@@ -646,21 +642,25 @@
 				port@0 {
 					#address-cells = <1>;
 					#size-cells = <0>;
-
 					reg = <0>;
 					cruparallel: endpoint@0 {
 						reg = <0>;
+					};
+					cruparallelend: endpoint@1 {
+						reg = <1>;
 					};
 				};
 
 				port@1 {
 					#address-cells = <1>;
 					#size-cells = <0>;
-
 					reg = <1>;
 					crucsi2: endpoint@0 {
 						reg = <0>;
 						remote-endpoint = <&csi2cru>;
+					};
+					crucsi2end: endpoint@1 {
+						reg = <1>;
 					};
 				};
 			};
@@ -685,24 +685,34 @@
 				#size-cells = <0>;
 
 				port@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
 					reg = <0>;
+					csi2port: endpoint@0 {
+						reg = <0>;
+					};
+					csi2portend: endpoint@1 {
+						reg = <1>;
+					};
 				};
 
 				port@1 {
 					#address-cells = <1>;
 					#size-cells = <0>;
 					reg = <1>;
-
 					csi2cru: endpoint@0 {
 						reg = <0>;
 						remote-endpoint = <&crucsi2>;
+					};
+					csi2cruend: endpoint@1 {
+						reg = <1>;
 					};
 				};
 			};
 		};
 
 		cpg: clock-controller@11010000 {
-			compatible = "renesas,r9a07g044-cpg","renesas,r9a07g044l-cpg";
+			compatible = "renesas,r9a07g044-cpg";
 			reg = <0 0x11010000 0 0x10000>;
 			clocks = <&extal_clk>;
 			clock-names = "extal";
@@ -724,7 +734,7 @@
 		};
 
 		pinctrl: pinctrl@11030000 {
-			compatible = "renesas,r9a07g044-pinctrl","renesas,r9a07g044l-pinctrl";
+			compatible = "renesas,r9a07g044-pinctrl";
 			reg = <0 0x11030000 0 0x10000>;
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -786,7 +796,28 @@
 				     <GIC_SPI 472 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 473 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 474 IRQ_TYPE_LEVEL_HIGH>,
-				     <GIC_SPI 475 IRQ_TYPE_LEVEL_HIGH>;
+				     <GIC_SPI 475 IRQ_TYPE_LEVEL_HIGH>,
+                     <GIC_SPI 25 IRQ_TYPE_EDGE_RISING>,
+                     <GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
+                     <GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
+                     <GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
+                     <GIC_SPI 37 IRQ_TYPE_EDGE_RISING>,
+                     <GIC_SPI 38 IRQ_TYPE_EDGE_RISING>,
+                     <GIC_SPI 39 IRQ_TYPE_EDGE_RISING>;
+        interrupt-names = "nmi",
+                          "irq0", "irq1", "irq2", "irq3",
+                          "irq4", "irq5", "irq6", "irq7",
+                          "tint0", "tint1", "tint2", "tint3",
+                          "tint4", "tint5", "tint6", "tint7",
+                          "tint8", "tint9", "tint10", "tint11",
+                          "tint12", "tint13", "tint14", "tint15",
+                          "tint16", "tint17", "tint18", "tint19",
+                          "tint20", "tint21", "tint22", "tint23",
+                          "tint24", "tint25", "tint26", "tint27",
+                          "tint28", "tint29", "tint30", "tint31",
+                          "bus-err", "ec7tie1-0", "ec7tie2-0",
+                          "ec7tiovf-0", "ec7tie1-1", "ec7tie2-1",
+                          "ec7tiovf-1";
 			clocks = <&cpg CPG_MOD R9A07G044_IA55_CLK>,
 				 <&cpg CPG_MOD R9A07G044_IA55_PCLK>;
 			clock-names = "clk", "pclk";
@@ -864,7 +895,7 @@
 		};
 
 		sdhi0: mmc@11c00000 {
-			compatible = "renesas,sdhi-r9a07g044l","renesas,sdhi-r9a07g044",
+			compatible = "renesas,sdhi-r9a07g044",
 				     "renesas,rcar-gen3-sdhi";
 			reg = <0x0 0x11c00000 0 0x10000>;
 			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>,
@@ -880,7 +911,7 @@
 		};
 
 		sdhi1: mmc@11c10000 {
-			compatible = "renesas,sdhi-r9a07g044l","renesas,sdhi-r9a07g044",
+			compatible = "renesas,sdhi-r9a07g044",
 				     "renesas,rcar-gen3-sdhi";
 			reg = <0x0 0x11c10000 0 0x10000>;
 			interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>,
@@ -897,7 +928,7 @@
 
 		eth0: ethernet@11c20000 {
 			compatible = "renesas,r9a07g044-gbeth",
-				     "renesas,rzg2l-gbeth","renesas,etheravb-r9a07g044l";
+				     "renesas,rzg2l-gbeth";
 			reg = <0 0x11c20000 0 0x10000>;
 			interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>,
@@ -917,7 +948,7 @@
 
 		eth1: ethernet@11c30000 {
 			compatible = "renesas,r9a07g044-gbeth",
-				     "renesas,rzg2l-gbeth","renesas,etheravb-r9a07g044l";
+				     "renesas,rzg2l-gbeth";
 			reg = <0 0x11c30000 0 0x10000>;
 			interrupts = <GIC_SPI 87 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>,
@@ -1006,7 +1037,7 @@
 
 		usb2_phy0: usb-phy@11c50200 {
 			compatible = "renesas,usb2-phy-r9a07g044",
-				     "renesas,rzg2l-usb2-phy","renesas,rcar-gen3-usb2-phy";
+				     "renesas,rzg2l-usb2-phy";
 			reg = <0 0x11c50200 0 0x700>;
 			interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&cpg CPG_MOD R9A07G044_USB_PCLK>,
@@ -1019,7 +1050,7 @@
 
 		usb2_phy1: usb-phy@11c70200 {
 			compatible = "renesas,usb2-phy-r9a07g044",
-				     "renesas,rzg2l-usb2-phy","renesas,rcar-gen3-usb2-phy";
+				     "renesas,rzg2l-usb2-phy";
 			reg = <0 0x11c70200 0 0x700>;
 			interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&cpg CPG_MOD R9A07G044_USB_PCLK>,
@@ -1051,16 +1082,21 @@
 
 		wdt0: watchdog@12800800 {
 			compatible = "renesas,r9a07g044-wdt",
-				     "renesas,rzg2l-wdt","renesas,r9a07g044l-wdt";
+				     "renesas,rzg2l-wdt";
 			reg = <0 0x12800800 0 0x400>;
-			clocks = <&extal_clk>;
+			clocks = <&extal_clk 0>;
+			clock-names = "pclk", "oscclk";
+			interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "wdt", "perrout";
+			resets = <&cpg R9A07G044_WDT1_PRESETN>;
 			power-domains = <&cpg>;
 			status = "disabled";
 		};
 
 		wdt1: watchdog@12800c00 {
 			compatible = "renesas,r9a07g044-wdt",
-				     "renesas,rzg2l-wdt","renesas,r9a07g044l-wdt";
+				     "renesas,rzg2l-wdt";
 			reg = <0 0x12800C00 0 0x400>;
 			clocks = <&cpg CPG_MOD R9A07G044_WDT1_PCLK>,
 				 <&cpg CPG_MOD R9A07G044_WDT1_CLK>;
