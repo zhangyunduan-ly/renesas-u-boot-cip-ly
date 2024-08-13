@@ -759,6 +759,7 @@ static const struct udevice_id ravb_ids[] = {
 	{ .compatible = "renesas,etheravb-rzv2m" },
 	{ .compatible = "renesas,etheravb-r9a07g043f" },
 	{ .compatible = "renesas,r9a08g045-gbeth" },
+	{ .compatible = "renesas,rzg2l-gbeth" },
 	{ }
 };
 
