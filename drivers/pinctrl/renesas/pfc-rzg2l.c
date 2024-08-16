@@ -35,6 +35,8 @@ struct rzg2l_pinctrl_priv {
 	void __iomem	*regs;
 	struct udevice	*dev;
 };
+static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config);
+static int rzg3s_pinctrl_set_state(struct udevice *dev, struct udevice *config);
 
 /* specific RZ/G3S port IDs with offset starting from 0x20 */
 static const unsigned int port_id_g3s[] = {
@@ -87,7 +89,67 @@ static void rzg2l_pinctrl_set_function(struct rzg2l_pinctrl_priv *priv,
 
 }
 
+static int rzg_pinctrl_set_state(struct udevice *dev, struct udevice *config)
+{
+	int ret;
+	ofnode cur_node  = dev_ofnode(dev);
+	if (ofnode_device_is_compatible(cur_node, "renesas,r9a08g045-pinctrl")) {
+		ret = rzg3s_pinctrl_set_state(dev,config);
+	}
+	else
+	{
+		ret = rzg2l_pinctrl_set_state(dev,config);
+	}
+	return ret;
+}
+
+
 static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config)
+{
+	struct rzg2l_pinctrl_priv *priv = dev_get_plat(dev);
+	u16 port;
+	u16 port_max = (u16)dev_get_driver_data(dev);
+	u8 pin, func;
+	int i, count;
+	const u32 *data;
+	u32 cells[port_max * RZG2L_MAX_PINS_PER_PORT];
+
+	data = dev_read_prop(config, "pinmux", &count);
+	if (count < 0) {
+		debug("%s: bad array size %d\n", __func__, count);
+		return -EINVAL;
+	}
+
+	count /= sizeof(u32);
+	if (count > port_max * RZG2L_MAX_PINS_PER_PORT) {
+		debug("%s: unsupported pins array count %d\n",
+		      __func__, count);
+		return -EINVAL;
+	}
+	writel(0, priv->regs + PWPR);
+	writel(PWPR_PFCWE, priv->regs + PWPR);
+
+	for (i = 0 ; i < count; i++) {
+		cells[i] = fdt32_to_cpu(data[i]);
+		func = (cells[i] >> 16) & 0xf;
+		port = (cells[i] / RZG2L_MAX_PINS_PER_PORT) & 0x1ff;
+		pin = cells[i] % RZG2L_MAX_PINS_PER_PORT;
+		/* rz/g2lul serial port assigned to function 6*/
+		if (func > 6 || port >= port_max || pin >= RZG2L_MAX_PINS_PER_PORT) {
+			printf("Invalid cell %i func %x port %x pin %x in node %s!\n",
+			       count,func,port,pin,ofnode_get_name(dev_ofnode(config)));
+			continue;
+		}
+
+		rzg2l_pinctrl_set_function(priv, port, pin, func);
+	}
+
+	writel(0, priv->regs + PWPR);
+	writel(PWPR_B0WI, priv->regs + PWPR);
+	return 0;
+}
+
+static int rzg3s_pinctrl_set_state(struct udevice *dev, struct udevice *config)
 {
 
 	u32 pin_mux[MAX_PINS_ONE_IP];
@@ -153,7 +215,7 @@ static int rzg2l_pinctrl_set_state(struct udevice *dev, struct udevice *config)
 }
 
 const struct pinctrl_ops rzg2l_pinctrl_ops  = {
-	.set_state = rzg2l_pinctrl_set_state,
+	.set_state = rzg_pinctrl_set_state,
 };
 
 static int rzg2l_pinctrl_probe(struct udevice *dev)
