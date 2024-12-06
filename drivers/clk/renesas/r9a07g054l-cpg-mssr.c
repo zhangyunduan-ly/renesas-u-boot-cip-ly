@@ -463,6 +463,10 @@ static const struct udevice_id r9a07g054l_clk_ids[] = {
 		.compatible	= "renesas,r9a07g054l-cpg",
 		.data		= (ulong)&r9a07g054l_cpg_info,
 	},
+	{
+		.compatible	= "renesas,r9a07g054-cpg",
+		.data		= (ulong)&r9a07g054l_cpg_info,
+	},
 	{ }
 };
 

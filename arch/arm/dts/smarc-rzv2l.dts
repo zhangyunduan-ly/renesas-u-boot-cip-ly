@@ -14,5 +14,5 @@
 
 / {
 	model = "Renesas SMARC EVK based on r9a07g054l2";
-	compatible = "renesas,smarc-evk", "renesas,r9a07g054l2", "renesas,r9a07g054", "renesas,r9a07g054l";
+	compatible = "renesas,smarc-evk", "renesas,r9a07g054l2", "renesas,r9a07g054";
 };
