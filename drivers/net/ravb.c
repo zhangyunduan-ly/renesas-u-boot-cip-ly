@@ -47,6 +47,17 @@
 #define RAVB_REG_MAHR		0x5c0
 #define RAVB_REG_MALR		0x5c8
 
+#define CXR31				0x530
+#define CXR35				0x540
+#define CXR31_SEL_LINK0		BIT(0)
+#define CXR31_SEL_LINK1		BIT(3)
+
+enum CXR35_BIT {
+	CXR35_SEL_MODIN		= 0x00000100,
+	CXR35_RGMII_SELECT	= 0x03E80000,
+	CXR35_MII_SELECT	= 0x03E80002,
+};
+
 #define CCC_OPC_CONFIG		BIT(0)
 #define CCC_OPC_OPERATION	BIT(1)
 #define CCC_BOC			BIT(20)
@@ -387,6 +398,10 @@ static int ravb_mac_init(struct ravb_priv *eth)
 
 	/* Recv frame limit set register */
 	writel(RAVB_RCV_BUFF_MAX + ETH_FCS_LEN, eth->iobase + RAVB_REG_RFLR);
+
+	/* MII mode config */
+	writel(readl(eth->iobase + CXR31) & ~CXR31_SEL_LINK0, eth->iobase + CXR31);
+	writel(CXR35_MII_SELECT, eth->iobase + CXR35);
 #else
 	/* Disable MAC Interrupt */
 	writel(0, eth->iobase + RAVB_REG_ECSIPR);
