@@ -52,7 +52,8 @@
 				<RZV2L_PINMUX(26, 1, 1)>,
 				<RZV2L_PINMUX(27, 0, 1)>,
 				<RZV2L_PINMUX(27, 1, 1)>,
-				<RZV2L_PINMUX(28, 0, 1)>;
+				<RZV2L_PINMUX(28, 0, 1)>,
+				<RZV2L_PINMUX(28, 1, 1)>;
 	};
 
 	eth1_pins: eth1 {

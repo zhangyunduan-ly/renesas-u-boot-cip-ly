@@ -61,13 +61,14 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"usb_pgood_delay=2000\0" \
+	"bootdelay=1\0" \
 	"bootm_size=0x10000000 \0" \
-	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p2 \0" \
 	"prodemmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p2 \0" \
-	"bootimage=unzip 0x4A080000 0x48080000; booti 0x48080000 - 0x48000000 \0" \
-	"emmcload=ext4load mmc 0:2 0x48080000 boot/Image;ext4load mmc 0:2 0x48000000 boot/r9a07g054l2-smarc.dtb;run prodemmcbootargs \0" \
-	"sd1load=ext4load mmc 1:2 0x48080000 boot/Image;ext4load mmc 1:2 0x48000000 boot/r9a07g054l2-smarc.dtb;run prodsdbootargs \0" \
-	"bootcmd_check=if mmc dev 1; then run sd1load; else run emmcload; fi \0"
+	"bootimage=booti 0x48080000 - 0x48000000 \0" \
+	"emmcload=fatload mmc 0:1 0x48080000 Image;fatload mmc 0:1 0x48000000 ly-rzv2l-smarc.dtb;run prodemmcbootargs \0" \
+	"bootcmd_check=if mmc dev 0; then run emmcload; fi \0" \
+	"usbpart=0:1\0" \
+	"usbload=usb start;fatload usb ${usbpart} 0x48080000 boot/Image;fatload usb ${usbpart} 0x48000000 boot/ly-rzv2l-smarc.dtb;fatload usb ${usbpart} 0x50000000 boot/RZV2L-LY.cpio.gz.u-boot;run prodemmcbootargs;booti 0x48080000 0x50000000 0x48000000 \0"
 
 #define CONFIG_BOOTCOMMAND	"env default -a;run bootcmd_check;run bootimage"
 
