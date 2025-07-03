@@ -105,6 +105,8 @@ int do_booti(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	int ret;
 
+	hw_wdt_feed();
+
 	/* Consume 'booti' */
 	argc--; argv++;
 
@@ -130,6 +132,8 @@ int do_booti(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 			      BOOTM_STATE_OS_PREP | BOOTM_STATE_OS_FAKE_GO |
 			      BOOTM_STATE_OS_GO,
 			      &images, 1);
+
+	hw_wdt_feed();
 
 	return ret;
 }

@@ -41,6 +41,8 @@ void main_loop(void)
 {
 	const char *s;
 
+	hw_wdt_feed();
+
 	bootstage_mark_name(BOOTSTAGE_ID_MAIN_LOOP, "main_loop");
 
 	if (IS_ENABLED(CONFIG_VERSION_VARIABLE))
@@ -62,6 +64,8 @@ void main_loop(void)
 		cli_secure_boot_cmd(s);
 
 	autoboot_command(s);
+
+	hw_wdt_feed();
 
 	cli_loop();
 	panic("No CLI available");
