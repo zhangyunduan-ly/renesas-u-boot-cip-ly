@@ -17,10 +17,14 @@
 #include <asm/arch/rmobile.h>
 #include <asm/arch/rcar-mstp.h>
 #include <asm/arch/sh_sdhi.h>
+#include <asm/system.h>
+#include <asm/ptrace.h>
 #include <i2c.h>
 #include <mmc.h>
 #include <wdt.h>
 #include <rzg2l_wdt.h>
+#include <spi.h>
+#include "../rzg-common/common.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -65,8 +69,20 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define RPC_CMNCR		0x10060000
 
+#define NVCR_READ_CMD		0xB5
+#define NVCR_WRITE_CMD		0xB1
+#define WRITE_ENABLE_CMD	0x06
+#define NVCR_LENGTH		2
+#define NVCR_BIT4_MASK		~(1 << 4)
+
 /* WDT */
 #define WDT_INDEX		0
+
+/* SYSC */
+#define SYS_BASE                       (0x11020000)
+#define SYS_LSI_MODE                   (SYS_BASE + 0xA00)
+#define SYS_LSI_MODE_STAT_MD_BOOT_MASK (0x7)
+#define ESD_MODE                       (0)
 
 void s_init(void)
 {
@@ -141,6 +157,71 @@ static void board_usb_init(void)
 	(*(volatile u32 *)(USB1_BASE + HcRhDescriptorA)) |= (0x1u << 12);       /* NOCP = 1 */
 }
 
+static int board_spinor_op_nvcr_setup(void)
+{
+	struct spi_slave *spi;
+	uint8_t nvcr[NVCR_LENGTH];
+	uint8_t write_enable_cmd = WRITE_ENABLE_CMD;
+	uint8_t read_cmd = NVCR_READ_CMD;
+	uint8_t write_cmd = NVCR_WRITE_CMD;
+	int ret;
+
+	/* Initialize SPI */
+	spi = spi_setup_slave(0, 0, 1000000, SPI_MODE_0);
+	if (!spi) {
+		printf("Failed to set up SPI slave\n");
+		return -1;
+	}
+
+	ret = spi_claim_bus(spi);
+	if (ret) {
+		printf("Failed to claim SPI bus\n");
+		spi_free_slave(spi);
+		return ret;
+	}
+
+	/* Read NVCR */
+	ret = spi_xfer(spi, 8, &read_cmd, NULL, SPI_XFER_BEGIN);
+	if (ret) {
+		printf("Failed to send NVCR Read command: %d\n", ret);
+		goto release_bus;
+	}
+
+	ret = spi_xfer(spi, 8 * NVCR_LENGTH, NULL, nvcr, SPI_XFER_END);
+	if (ret) {
+		printf("Failed to read NVCR: %d\n", ret);
+		goto release_bus;
+	}
+
+	/* Clear bit 4 of the NVCR - RESET# on DQ3 */
+	nvcr[0] &= NVCR_BIT4_MASK;
+
+	/* Write enable */
+	ret = spi_xfer(spi, 8, &write_enable_cmd, NULL, SPI_XFER_BEGIN | SPI_XFER_END);
+	if (ret) {
+		printf("Failed to send Write Enable command: %d\n", ret);
+		goto release_bus;
+	}
+
+	/* Write NVCR */
+	ret = spi_xfer(spi, 8, &write_cmd, NULL, SPI_XFER_BEGIN);
+	if (ret) {
+		printf("Failed to send NVCR Write command: %d\n", ret);
+		goto release_bus;
+	}
+
+	ret = spi_xfer(spi, 8 * NVCR_LENGTH, nvcr, NULL, SPI_XFER_END);
+	if (ret) {
+		printf("Failed to write NVCR: %d\n", ret);
+		goto release_bus;
+	}
+
+release_bus:
+	spi_release_bus(spi);
+	spi_free_slave(spi);
+	return ret;
+}
+
 int board_early_init_f(void)
 {
 
@@ -151,6 +232,8 @@ int board_init(void)
 {
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
+
+	board_spinor_op_nvcr_setup();
 	board_usb_init();
 
 	return 0;
@@ -178,3 +261,28 @@ int board_late_init(void)
 
 	return 0;
 }
+
+static const char * const rzg2lc_dt_esd_mode[] = {
+	"/soc/mmc@11c00000", "vmmc-supply", "<&/regulator-vcc-sdhi0>",
+	"/soc/mmc@11c00000", "vqmmc-supply", "<&/regulator-vccq-sdhi0>",
+};
+
+int ft_verify_fdt(void *fdt)
+{
+	const char **fdt_dt = NULL;
+	int size = 0;
+	u32 boot_mode = readl(SYS_LSI_MODE);
+
+	switch (boot_mode & SYS_LSI_MODE_STAT_MD_BOOT_MASK) {
+	case ESD_MODE:
+	{
+		fdt_dt = (const char **)rzg2lc_dt_esd_mode;
+		size = ARRAY_SIZE(rzg2lc_dt_esd_mode);
+		break;
+	}
+	default:
+		return 1;
+	}
+
+	return update_fdt(fdt, fdt_dt, size);
+};
