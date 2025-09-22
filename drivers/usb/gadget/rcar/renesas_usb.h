@@ -440,7 +440,7 @@ static inline void *phy_get_drvdata(struct phy *phy)
 
 
 #if defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G043U) || defined(CONFIG_R9A07G054L) || defined(CONFIG_ARCH_RZMPU)
-#define PHY_BASE	0x11c50200
+#define PHY_BASE	0x11c70200
 #define RCAR3_PHY_DEVICE "RZG2L-PHY "
 #define USBHS_BASE	0x11c60000
 #define RCAR3_USBHS_DEVICE "RZG2L-USBHS "
