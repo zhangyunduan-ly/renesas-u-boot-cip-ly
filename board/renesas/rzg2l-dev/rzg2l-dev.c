@@ -236,6 +236,7 @@ enum Rzg2LGpioPins_E {
 #define RUN_LED_GPIO			RZG2L_P39_1
 
 /* WIFI */
+#define WIFI_POWER_GPIO			RZG2L_P07_2
 #define WIFI_EN_GPIO			RZG2L_P46_0
 #define BT_EN_GPIO				RZG2L_P47_2
 
@@ -616,12 +617,17 @@ static void peripheral_init()
 
 	// gpio_request(RUN_LED_GPIO, "RUN_LED");
 	// gpio_direction_output(RUN_LED_GPIO, 0);
+	gpio_request(WIFI_POWER_GPIO, "WIFI_POWER");
+	gpio_direction_output(WIFI_POWER_GPIO, 1);
 	gpio_request(WIFI_EN_GPIO, "WIFI_EN");
 	gpio_direction_output(WIFI_EN_GPIO, 0);
 	gpio_request(BT_EN_GPIO, "BT_EN");
 	gpio_direction_output(BT_EN_GPIO, 0);
 
 	mdelay(100);
+
+	gpio_direction_output(WIFI_POWER_GPIO, 0);
+	udelay(2);
 	gpio_direction_output(WIFI_EN_GPIO, 1);
 	gpio_direction_output(BT_EN_GPIO, 1);
 }
