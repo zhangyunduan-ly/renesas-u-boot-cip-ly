@@ -225,6 +225,11 @@ config TARGET_SMARC_RZG2UL
 	help
           Support for Renesas RZ/G2UL Dev Platform
 
+config TARGET_LY_RZG2UL
+	bool "RZ/G2UL LinYang board"
+	help
+          Support for Renesas RZ/G2UL Dev Platform
+
 config TARGET_RZG3S_DEV
 	bool "RZ/G3S Dev board"
 	help

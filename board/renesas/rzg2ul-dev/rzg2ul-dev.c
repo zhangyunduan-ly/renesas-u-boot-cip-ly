@@ -79,6 +79,100 @@ DECLARE_GLOBAL_DATA_PTR;
 /* WDT */
 #define WDT_INDEX		0
 
+enum Rzg2ULGpioPins_E {
+	RZG2UL_P00_0=0,
+	RZG2UL_P00_1,
+	RZG2UL_P00_2,
+	RZG2UL_P00_3,
+	RZG2UL_P01_0,
+	RZG2UL_P01_1,
+	RZG2UL_P01_2,
+	RZG2UL_P01_3,
+	RZG2UL_P01_4,
+	RZG2UL_P02_0,
+	RZG2UL_P02_1,
+	RZG2UL_P02_2,
+	RZG2UL_P02_3,
+	RZG2UL_P03_0,
+	RZG2UL_P03_1,
+	RZG2UL_P03_2,
+	RZG2UL_P03_3,
+	RZG2UL_P04_0,
+	RZG2UL_P04_1,
+	RZG2UL_P04_2,
+	RZG2UL_P04_3,
+	RZG2UL_P04_4,
+	RZG2UL_P04_5,
+	RZG2UL_P05_0,
+	RZG2UL_P05_1,
+	RZG2UL_P05_2,
+	RZG2UL_P05_3,
+	RZG2UL_P05_4,
+	RZG2UL_P06_0,
+	RZG2UL_P06_1,
+	RZG2UL_P06_2,
+	RZG2UL_P06_3,
+	RZG2UL_P06_4,
+	RZG2UL_P07_0,
+	RZG2UL_P07_1,
+	RZG2UL_P07_2,
+	RZG2UL_P07_3,
+	RZG2UL_P07_4,
+	RZG2UL_P08_0,
+	RZG2UL_P08_1,
+	RZG2UL_P08_2,
+	RZG2UL_P08_3,
+	RZG2UL_P08_4,
+	RZG2UL_P09_0,
+	RZG2UL_P09_1,
+	RZG2UL_P09_2,
+	RZG2UL_P09_3,
+	RZG2UL_P10_0,
+	RZG2UL_P10_1,
+	RZG2UL_P10_2,
+	RZG2UL_P10_3,
+	RZG2UL_P10_4,
+	RZG2UL_P11_0,
+	RZG2UL_P11_1,
+	RZG2UL_P11_2,
+	RZG2UL_P11_3,
+	RZG2UL_P12_0,
+	RZG2UL_P12_1,
+	RZG2UL_P13_0,
+	RZG2UL_P13_1,
+	RZG2UL_P13_2,
+	RZG2UL_P13_3,
+	RZG2UL_P13_4,
+	RZG2UL_P14_0,
+	RZG2UL_P14_1,
+	RZG2UL_P14_2,
+	RZG2UL_P15_0,
+	RZG2UL_P15_1,
+	RZG2UL_P15_2,
+	RZG2UL_P15_3,
+	RZG2UL_P16_0,
+	RZG2UL_P16_1,
+	RZG2UL_P17_0,
+	RZG2UL_P17_1,
+	RZG2UL_P17_2,
+	RZG2UL_P17_3,
+	RZG2UL_P18_0,
+	RZG2UL_P18_1,
+	RZG2UL_P18_2,
+	RZG2UL_P18_3,
+	RZG2UL_P18_4,
+	RZG2UL_P18_5
+};
+
+/* PERIPHERAL Power Control */
+#define PERIPHERAL_POWER_GPIO	RZG2L_P07_1
+
+/* LED */
+#define RUN_LED_GPIO			RZG2L_P19_0
+
+/* WDT */
+#define WDT_GPIO				RZG2L_P12_1
+
 void s_init(void)
 {
 #if CONFIG_TARGET_SMARC_RZG2UL
@@ -89,6 +183,7 @@ void s_init(void)
 	*(volatile u16 *)(PFC_PM16) = (*(volatile u16 *)(PFC_PM16) & 0xFFF3) | 0x0008; /* Port output mode 0b10 */
 	*(volatile u8 *)(PFC_P10) = (*(volatile u8 *)(PFC_P10) & 0xF7) | 0x08; /* P0_3  output 1	*/
 	*(volatile u8 *)(PFC_P16) = (*(volatile u8 *)(PFC_P16) & 0xFD) | 0x02; /* P6_1  output 1	*/
+#elif CONFIG_TARGET_LY_RZG2UL
 #elif CONFIG_TARGET_RZG2UL_TYPE2_DEV
 	/* SD1 power control : P13_4 = 1 P13_3 = 0 */
 	*(volatile u8 *)(PFC_PMC1D) &= 0xE7;	/* Port func mode 0b0000	*/
@@ -115,6 +210,7 @@ void s_init(void)
 	*(volatile u32 *)(ETH_MII_RGMII) = (*(volatile u32 *)(ETH_MII_RGMII) & 0xFFFFFFFC);
 	/* ETH CLK */
 	*(volatile u32 *)(CPG_RESET_ETH) = 0x30002;
+#elif CONFIG_TARGET_LY_RZG2UL
 #elif CONFIG_TARGET_RZG2UL_TYPE2_DEV
 	/* can go in board_eht_init() once enabled */
 	*(volatile u32 *)(ETH_CH0) = (*(volatile u32 *)(ETH_CH0) & 0xFFFFFFFC) | ETH_PVDD_2500;
@@ -223,6 +319,33 @@ int board_init(void)
 		printf("SW_ET0_EN: OFF\n");
 		*(volatile u32 *)(ETH_CH0) = (*(volatile u32 *)(ETH_CH0) & 0xFFFFFFFC) | ETH_PVDD_3300;
 	}
+#elif CONFIG_TARGET_LY_RZG2UL
+	struct udevice *dev;
+	struct udevice *bus;
+	const u8 pmic_bus = 0;
+	const u8 pmic_addr = 0x58;
+	u8 data;
+	int ret;
+
+	ret = uclass_get_device_by_seq(UCLASS_I2C, pmic_bus, &bus);
+	if (ret)
+		hang();
+
+	ret = i2c_get_chip(bus, pmic_addr, 1, &dev);
+	if (ret)
+		hang();
+
+	ret = dm_i2c_read(dev, 0x2, &data, 1);
+	if (ret)
+		hang();
+
+	if ((data & 0x08) == 0) {
+		printf("SW_ET0_EN: ON\n");
+		*(volatile u32 *)(ETH_CH0) = (*(volatile u32 *)(ETH_CH0) & 0xFFFFFFFC) | ETH_PVDD_1800;
+	} else {
+		printf("SW_ET0_EN: OFF\n");
+		*(volatile u32 *)(ETH_CH0) = (*(volatile u32 *)(ETH_CH0) & 0xFFFFFFFC) | ETH_PVDD_3300;
+	}
 #endif
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
@@ -245,11 +368,41 @@ void reset_cpu(void)
 #endif // CONFIG_RENESAS_RZG2LWDT
 }
 
+static int feed_dog_index = 0;
+
+void hw_wdt_init(void)
+{
+	gpio_request(WDT_GPIO, "WDT");
+	gpio_direction_output(WDT_GPIO, 1);
+}
+
+void hw_wdt_feed(void)
+{
+	if (feed_dog_index % 2) {
+		gpio_direction_output(WDT_GPIO, 1); //high
+	} else {
+		gpio_direction_output(WDT_GPIO, 0); //low
+	}
+	feed_dog_index++;
+}
+
+static void peripheral_init()
+{
+	gpio_request(PERIPHERAL_POWER_GPIO, "PERIPHERAL_POWER");
+	gpio_direction_output(PERIPHERAL_POWER_GPIO, 1);
+}
+
 int board_late_init(void)
 {
 #ifdef CONFIG_RENESAS_RZG2LWDT
 	rzg2l_reinitr_wdt();
 #endif // CONFIG_RENESAS_RZG2LWDT
+
+#if CONFIG_TARGET_LY_RZG2UL
+	hw_wdt_init();
+	peripheral_init();
+	hw_wdt_feed();
+#endif
 
 	return 0;
 }
