@@ -171,7 +171,7 @@ enum Rzg2ULGpioPins_E {
 #define RUN_LED_GPIO			RZG2UL_P16_0
 
 /* WDT */
-#define WDT_GPIO				RZG2UL_P9_3
+#define WDT_GPIO				RZG2UL_P09_3
 
 void s_init(void)
 {
