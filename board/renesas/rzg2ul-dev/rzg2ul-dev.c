@@ -165,13 +165,13 @@ enum Rzg2ULGpioPins_E {
 };
 
 /* PERIPHERAL Power Control */
-#define PERIPHERAL_POWER_GPIO	RZG2UL_P07_1
+#define PERIPHERAL_POWER_GPIO	RZG2UL_P10_3
 
 /* LED */
-#define RUN_LED_GPIO			RZG2UL_P18_0
+#define RUN_LED_GPIO			RZG2UL_P16_0
 
 /* WDT */
-#define WDT_GPIO				RZG2UL_P12_1
+#define WDT_GPIO				RZG2UL_P9_3
 
 void s_init(void)
 {
