@@ -236,7 +236,7 @@ enum Rzg2LGpioPins_E {
 #define RUN_LED_GPIO			RZG2L_P39_1
 
 /* WIFI */
-#define WIFI_POWER_GPIO			RZG2L_P07_2
+#define WIFI_POWER_GPIO			RZG2L_P16_1
 #define WIFI_EN_GPIO			RZG2L_P46_0
 #define BT_EN_GPIO				RZG2L_P47_2
 
@@ -621,15 +621,15 @@ static void peripheral_init()
 	gpio_direction_output(WIFI_POWER_GPIO, 1);
 	gpio_request(WIFI_EN_GPIO, "WIFI_EN");
 	gpio_direction_output(WIFI_EN_GPIO, 0);
-	gpio_request(BT_EN_GPIO, "BT_EN");
-	gpio_direction_output(BT_EN_GPIO, 0);
+	// gpio_request(BT_EN_GPIO, "BT_EN");
+	// gpio_direction_output(BT_EN_GPIO, 0);
 
 	mdelay(100);
 
 	gpio_direction_output(WIFI_POWER_GPIO, 0);
 	udelay(2);
 	gpio_direction_output(WIFI_EN_GPIO, 1);
-	gpio_direction_output(BT_EN_GPIO, 1);
+	// gpio_direction_output(BT_EN_GPIO, 1);
 }
 
 void s_init(void)
@@ -828,7 +828,7 @@ int board_late_init(void)
 #endif // CONFIG_RENESAS_RZG2LWDT
 	hw_wdt_init();
 	peripheral_init();
-	// st75161_init();
+	st75161_init();
 	hw_wdt_feed();
 
 	return 0;
