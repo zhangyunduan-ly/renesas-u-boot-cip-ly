@@ -229,19 +229,20 @@ enum Rzg2LGpioPins_E {
 	RZG2L_P48_4
 };
 
-/* PERIPHERAL Power Control */
-#define PERIPHERAL_POWER_GPIO	RZG2L_P15_0
+/* Power Control */
+#define PERIPHERAL_POWER_GPIO	RZG2L_P5_2
+#define BATTERY_DISCHARGE_GPIO	RZG2L_P42_4
 
 /* LED */
-#define RUN_LED_GPIO			RZG2L_P39_1
+#define RUN_LED_GPIO			RZG2L_P16_1
 
 /* WIFI */
-#define WIFI_POWER_GPIO			RZG2L_P16_1
+#define WIFI_POWER_GPIO			RZG2L_P42_2
 #define WIFI_EN_GPIO			RZG2L_P46_0
 #define BT_EN_GPIO				RZG2L_P47_2
 
 /* WDT */
-#define WDT_GPIO				RZG2L_P17_1
+#define WDT_GPIO				RZG2L_P17_0
 
 /* LCD */
 #define ST75161_CLK_GPIO		RZG2L_P19_1
@@ -612,6 +613,9 @@ static int st75161_init(void)
 
 static void peripheral_init()
 {
+	gpio_request(BATTERY_DISCHARGE_GPIO, "BATTERY_DISCHARGE");
+	gpio_direction_output(BATTERY_DISCHARGE_GPIO, 1);
+
 	gpio_request(PERIPHERAL_POWER_GPIO, "PERIPHERAL_POWER");
 	gpio_direction_output(PERIPHERAL_POWER_GPIO, 1);
 
