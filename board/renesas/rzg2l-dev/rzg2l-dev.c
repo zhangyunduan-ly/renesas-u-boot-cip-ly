@@ -230,7 +230,7 @@ enum Rzg2LGpioPins_E {
 };
 
 /* Power Control */
-#define PERIPHERAL_POWER_GPIO	RZG2L_P5_2
+#define PERIPHERAL_POWER_GPIO	RZG2L_P05_2
 #define BATTERY_DISCHARGE_GPIO	RZG2L_P42_4
 
 /* LED */
