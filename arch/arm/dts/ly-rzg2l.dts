@@ -116,7 +116,7 @@
 &eth1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&eth1_pins>;
-	status = "okay";
+	status = "disabled";
 
 	phy-handle = <&phy1>;
 	phy-mode = "mii";
