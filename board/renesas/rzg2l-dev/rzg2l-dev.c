@@ -522,8 +522,7 @@ static int st75161_init(void)
 	st75161_write_dat(0x0B);		// VB, VR,VF All ON
 
 	st75161_write_cmd(0x81);		// set Vop
-
-	st75161_write_dat(0x20);		// Vop[5:0]  14.5V    1/12  0x30
+	st75161_write_dat(0x3F);		// Vop[5:0]  14.5V    1/12  0x30
 	st75161_write_dat(0x04);		// Vop[8:6]
 
 	st75161_write_cmd(0x0C);		// LSB on top      20190924
@@ -535,7 +534,7 @@ static int st75161_init(void)
 	st75161_write_cmd(0x32);		// Analog Circuit Set
 	st75161_write_dat(0x00);
 	st75161_write_dat(0x01);		// Booster Efficiency =6KHz
-	st75161_write_dat(0x03);		// 1/11 Bias
+	st75161_write_dat(0x02);		// 1/12 Bias
 
 	st75161_write_cmd(0x51);		// Booster Level Set
 	st75161_write_dat(0xFB);		// 10 Times
