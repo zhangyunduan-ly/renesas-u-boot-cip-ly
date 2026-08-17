@@ -232,9 +232,13 @@ enum Rzg2LGpioPins_E {
 /* Power Control */
 #define PERIPHERAL_POWER_GPIO	RZG2L_P05_2
 #define BATTERY_DISCHARGE_GPIO	RZG2L_P42_4
+#define PFI_GPIO				RZG2L_P17_1
 
 /* LED */
 #define RUN_LED_GPIO			RZG2L_P16_1
+
+/* KEY */
+#define KEY_WAKEUP_GPIO			RZG2L_P09_1
 
 /* WIFI */
 #define WIFI_POWER_GPIO			RZG2L_P42_2
@@ -251,6 +255,9 @@ enum Rzg2LGpioPins_E {
 #define CSB_GPIO				RZG2L_P45_2
 #define RSTB_GPIO				RZG2L_P18_0
 #define BL_GPIO					RZG2L_P45_3
+
+/* PLC Power enable */
+#define PLC_POWER_EN			RZG2L_P39_2
 
 #define LCD_Com		160
 #define LCD_Seg		160
@@ -613,14 +620,27 @@ static int st75161_init(void)
 
 static void peripheral_init()
 {
-	gpio_request(BATTERY_DISCHARGE_GPIO, "BATTERY_DISCHARGE");
-	gpio_direction_output(BATTERY_DISCHARGE_GPIO, 1);
+	/* avoid PLC_POWER_EN leak current */
+	gpio_request(PLC_POWER_EN, "PLC_POWER");
+	gpio_direction_output(PLC_POWER_EN, 0);
 
+	/* open peripheral power */
 	gpio_request(PERIPHERAL_POWER_GPIO, "PERIPHERAL_POWER");
 	gpio_direction_output(PERIPHERAL_POWER_GPIO, 1);
+	mdelay(10);
 
-	// gpio_request(RUN_LED_GPIO, "RUN_LED");
-	// gpio_direction_output(RUN_LED_GPIO, 0);
+	/* No AC, open battery discharge*/
+	gpio_request(PFI_GPIO, "PFI");
+	gpio_request(BATTERY_DISCHARGE_GPIO, "BATTERY_DISCHARGE");
+	gpio_direction_input(PFI_GPIO);
+	if (gpio_get_value(PFI_GPIO)) {
+		gpio_direction_output(BATTERY_DISCHARGE_GPIO, 0);
+	} else {
+		gpio_direction_output(BATTERY_DISCHARGE_GPIO, 1);
+	}
+
+	gpio_request(RUN_LED_GPIO, "RUN_LED");
+	gpio_direction_output(RUN_LED_GPIO, 0);
 	gpio_request(WIFI_POWER_GPIO, "WIFI_POWER");
 	gpio_direction_output(WIFI_POWER_GPIO, 1);
 	gpio_request(WIFI_EN_GPIO, "WIFI_EN");
@@ -633,7 +653,6 @@ static void peripheral_init()
 	gpio_direction_output(WIFI_POWER_GPIO, 0);
 	udelay(2);
 	gpio_direction_output(WIFI_EN_GPIO, 1);
-	// gpio_direction_output(BT_EN_GPIO, 1);
 }
 
 void s_init(void)
